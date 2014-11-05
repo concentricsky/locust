@@ -43,6 +43,7 @@ $("ul.tabs").tabs("div.panes > div");
 var stats_tpl = $('#stats-template');
 var errors_tpl = $('#errors-template');
 var exceptions_tpl = $('#exceptions-template');
+var all_requests_chart = $('#all_requests');
 
 $('#swarm_form').submit(function(event) {
     event.preventDefault();
@@ -127,10 +128,80 @@ function updateStats() {
 
         totalRow = report.stats.pop()
         sortedStats = (report.stats).sort(sortBy(sortAttribute, desc))
+
+        var stats_series = [];
+        for (i=0; i<sortedStats.length; i++){
+            stats_series.push({
+                name: sortedStats[i].method + " " + sortedStats[i].name,
+                data: sortedStats[i].all_responses_with_timestamps
+            });
+        }
+
         sortedStats.push(totalRow)
         $('#stats tbody').jqoteapp(stats_tpl, sortedStats);
         alternate = false;
         $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sortBy(sortAttribute, desc)));
+
+
+        var datetime_formatter = function() {
+            t = new Date(1970,0,1);
+            t.setSeconds(this.value);
+            return t.toLocaleTimeString()
+        }
+
+        var chart = new Highcharts.Chart({
+            chart: {
+                renderTo: 'all_requests',
+                type: 'scatter',
+            },
+            title: {
+                text: ''
+            },
+            plotOptions: {
+                scatter: {
+                    animation: false,
+                    marker: {
+                        radius: 5,
+                        states: {
+                            hover: {
+                                enabled: true,
+                                lineColor: 'rgb(100,100,100)'
+                            }
+                        }
+                    },
+                    states: {
+                        hover: {
+                            marker: {
+                                enabled: false
+                            }
+                        }
+                    },
+                    tooltip: {
+                        headerFormat: '<b>{series.name}</b><br>',
+                        pointFormat: '{point.x} cm, {point.y} kg'
+                    }
+                }
+            },
+            xAxis: {
+                type: "datetime",
+                labels: {
+                    formatter: datetime_formatter,
+                },
+                title: {
+                    enabled: false,
+                },
+                startOnTick: false,
+                endOnTick: false,
+                showLastLabel: false
+            },
+            yAxis: {
+                title: {
+                    text: 'Response Time (ms)'
+                }
+            },
+            series: stats_series
+        });
+
         setTimeout(updateStats, 2000);
     });
 }

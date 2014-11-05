@@ -109,6 +109,7 @@
                         <tbody>
                         </tbody>
                     </table>
+                    <div id="all_requests"></div>
                 </div>
                 <div style="display:none;">
                     <table id="errors" class="stats">
@@ -179,6 +180,9 @@
     <script type="text/javascript" src="/static/jquery-1.4.min.js"></script>
     <script type="text/javascript" src="/static/jquery.jqote2.min.js"></script>
     <script type="text/javascript" src="/static/jquery.tools.min.js"></script>
+    <script type="text/javascript" src="/static/highcharts/standalone-framework.js"></script>
+    <script type="text/javascript" src="/static/highcharts/highcharts.js"></script>
+    <script type="text/javascript" src="/static/highcharts/dark-theme.js"></script>
     <script type="text/x-jqote-template" id="stats-template">
         <![CDATA[
         <tr class="<%=(alternate ? "dark" : "")%> <%=(this.name == "Total" ? "total" : "")%>">
