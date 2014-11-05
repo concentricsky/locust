@@ -148,6 +148,7 @@ def request_stats():
             "current_rps": s.current_rps,
             "median_response_time": s.median_response_time,
             "avg_content_length": s.avg_content_length,
+            "all_responses_with_timestamps": s.all_responses_with_timestamps,
         })
     
     report = {"stats":stats, "errors":[e.to_dict() for e in runners.locust_runner.errors.itervalues()]}

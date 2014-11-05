@@ -114,6 +114,8 @@ class StatsEntry(object):
     last_request_timestamp = None
     """ Time of the last request for this entry """
     
+    all_responses_with_timestamps = []
+
     def __init__(self, stats, name, method):
         self.stats = stats
         self.name = name
@@ -131,6 +133,7 @@ class StatsEntry(object):
         self.last_request_timestamp = int(time.time())
         self.num_reqs_per_sec = {}
         self.total_content_length = 0
+        self.all_responses_with_timestamps = []
     
     def log(self, response_time, content_length):
         self.stats.num_requests += 1
@@ -141,6 +144,12 @@ class StatsEntry(object):
 
         # increase total content-length
         self.total_content_length += content_length
+
+        # add this entry into the list of all responses
+        self.all_responses_with_timestamps.append([
+            time.time()-time.timezone,
+            response_time,
+        ])
 
     def _log_time_of_request(self):
         t = int(time.time())
