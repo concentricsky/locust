@@ -83,15 +83,17 @@
         </div>
         
         <div class="status" id="status">
-            <ul class="tabs">
-                <li><a href="#">Statistics</a></li>
-                <li><a href="#">Failures</a></li>
-                <li><a href="#">Exceptions</a></li>
-                <li><a href="#">Download Data</a></li>
+            <ul>
+                <li><a href="#tabs-1">Statistics</a></li>
+                <li><a href="#tabs-2">Failures</a></li>
+                <li><a href="#tabs-3">Exceptions</a></li>
+                <li><a href="#tabs-4">Download Data</a></li>
             </ul>
             <div style="clear:left;"></div>
-            <div class="panes">
-                <div style="display:none;">
+
+                <div id="tabs-1">
+                    <a href="#" id="pause_stats">Pause updates</a>
+                    <a href="#" id="unpause_stats">Restart stat updates</a>
                     <table id="stats" class="stats">
                         <thead>
                             <tr>
@@ -112,7 +114,7 @@
                     </table>
                     <div id="all_requests"></div>
                 </div>
-                <div style="display:none;">
+                <div id="tabs-2">
                     <table id="errors" class="stats">
                         <thead>
                             <th class="error_count stats_label" data-sortkey="1"># fails</th>
@@ -124,7 +126,7 @@
                         </tbody>
                     </table>
                 </div>
-                <div style="display:none;">
+                <div id="tabs-3">
                     <table id="exceptions" class="stats">
                         <thead>
                             <th class="exception_occurences stats_label" data-sortkey="1"># occurences</th>
@@ -134,14 +136,13 @@
                         </tbody>
                     </table>
                 </div>
-                <div style="display:none;">
+                <div id="tabs-4">
                     <div style="margin-top:20px;">
                         <a href="/stats/requests/csv">Download request statistics CSV</a><br>
                         <a href="/stats/distribution/csv">Download response time distribution CSV</a><br>
                         <a href="/exceptions/csv">Download exceptions CSV</a>
                     </div>
                 </div>
-            </div>
         </div>
         
         <div class="about" style="display:none;">
@@ -178,10 +179,9 @@
         </div>
     </div>
 
-    <script type="text/javascript" src="/static/jquery-1.4.min.js"></script>
+    <script type="text/javascript" src="/static/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="/static/jquery-ui.min.js"></script>
     <script type="text/javascript" src="/static/jquery.jqote2.min.js"></script>
-    <script type="text/javascript" src="/static/jquery.tools.min.js"></script>
-    <script type="text/javascript" src="/static/highcharts/standalone-framework.js"></script>
     <script type="text/javascript" src="/static/highcharts/highcharts.js"></script>
     <script type="text/javascript" src="/static/highcharts/dark-theme.js"></script>
     <script type="text/x-jqote-template" id="stats-template">

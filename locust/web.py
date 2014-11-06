@@ -3,7 +3,7 @@
 import csv
 import json
 import os.path
-from time import time
+import time
 from itertools import chain
 from collections import defaultdict
 from StringIO import StringIO
@@ -98,7 +98,7 @@ def request_stats_csv():
         ))
 
     response = make_response("\n".join(rows))
-    file_name = "requests_{0}.csv".format(time())
+    file_name = "requests_{0}.csv".format(time.time())
     disposition = "attachment;filename={0}".format(file_name)
     response.headers["Content-type"] = "text/csv"
     response.headers["Content-disposition"] = disposition
@@ -126,7 +126,7 @@ def distribution_stats_csv():
             rows.append('"%s",0,"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"' % s.name)
 
     response = make_response("\n".join(rows))
-    file_name = "distribution_{0}.csv".format(time())
+    file_name = "distribution_{0}.csv".format(time.time())
     disposition = "attachment;filename={0}".format(file_name)
     response.headers["Content-type"] = "text/csv"
     response.headers["Content-disposition"] = disposition
@@ -175,6 +175,24 @@ def request_stats():
     report["user_count"] = runners.locust_runner.user_count
     return json.dumps(report)
 
+@app.route('/stats/responsetimes')
+def responsetime_stats(*args, **kwargs):
+    timestamp_filter = request.args.get('timestamp', None)
+    stats = []
+    for stat in _sort_stats(runners.locust_runner.request_stats):
+        all_responses_with_timestamps = stat.all_responses_with_timestamps
+        if timestamp_filter:
+            timestamp_filter = float(timestamp_filter)
+            all_responses_with_timestamps = [i for i in all_responses_with_timestamps if i[0] > timestamp_filter]
+        stats.append({
+            "method": stat.method,
+            "name": stat.name,
+            "all_responses_with_timestamps": all_responses_with_timestamps,
+        })
+    overall_last_request_timestamp = runners.locust_runner.stats.last_request_timestamp or 0
+    return json.dumps({"stats": stats, "last_timestamp": overall_last_request_timestamp-time.timezone})
+
+
 @app.route("/exceptions")
 def exceptions():
     response = make_response(json.dumps({'exceptions': [{"count": row["count"], "msg": row["msg"], "traceback": row["traceback"], "nodes" : ", ".join(row["nodes"])} for row in runners.locust_runner.exceptions.itervalues()]}))
@@ -192,7 +210,7 @@ def exceptions_csv():
     
     data.seek(0)
     response = make_response(data.read())
-    file_name = "exceptions_{0}.csv".format(time())
+    file_name = "exceptions_{0}.csv".format(time.time())
     disposition = "attachment;filename={0}".format(file_name)
     response.headers["Content-type"] = "text/csv"
     response.headers["Content-disposition"] = disposition
