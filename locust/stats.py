@@ -130,7 +130,7 @@ class StatsEntry(object):
         self.response_times = {}
         self.min_response_time = None
         self.max_response_time = 0
-        self.last_request_timestamp = int(time.time())
+        self.last_request_timestamp = time.time()
         self.num_reqs_per_sec = {}
         self.total_content_length = 0
         self.all_responses_with_timestamps = []
@@ -152,7 +152,7 @@ class StatsEntry(object):
         ])
 
     def _log_time_of_request(self):
-        t = int(time.time())
+        t = time.time()
         self.num_reqs_per_sec[t] = self.num_reqs_per_sec.setdefault(t, 0) + 1
         self.last_request_timestamp = t
         self.stats.last_request_timestamp = t
@@ -221,9 +221,10 @@ class StatsEntry(object):
     def current_rps(self):
         if self.stats.last_request_timestamp is None:
             return 0
-        slice_start_time = max(self.stats.last_request_timestamp - 12, int(self.stats.start_time or 0))
+        last_request_timestamp_seconds = int(self.stats.last_request_timestamp)
+        slice_start_time = max(last_request_timestamp_seconds - 12, int(self.stats.start_time or 0))
 
-        reqs = [self.num_reqs_per_sec.get(t, 0) for t in range(slice_start_time, self.stats.last_request_timestamp-2)]
+        reqs = [self.num_reqs_per_sec.get(t, 0) for t in range(slice_start_time, last_request_timestamp_seconds-2)]
         return avg(reqs)
 
     @property
@@ -231,7 +232,7 @@ class StatsEntry(object):
         if not self.stats.last_request_timestamp or not self.stats.start_time:
             return 0.0
 
-        return self.num_requests / max(self.stats.last_request_timestamp - self.stats.start_time, 1)
+        return self.num_requests / max(int(self.stats.last_request_timestamp) - self.stats.start_time, 1)
 
     @property
     def avg_content_length(self):
@@ -268,7 +269,7 @@ class StatsEntry(object):
                 self.num_reqs_per_sec[key] = self.num_reqs_per_sec.get(key, 0) +  other.num_reqs_per_sec[key]
         else:
             # still add the number of reqs per seconds the last 20 seconds
-            for i in xrange(other.last_request_timestamp-20, other.last_request_timestamp+1):
+            for i in xrange(int(other.last_request_timestamp)-20, int(other.last_request_timestamp)+1):
                 if i in other.num_reqs_per_sec:
                     self.num_reqs_per_sec[i] = self.num_reqs_per_sec.get(i, 0) + other.num_reqs_per_sec[i]
     

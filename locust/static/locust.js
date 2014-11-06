@@ -17,6 +17,7 @@ $("#box_stop a").click(function(event) {
 $("#box_reset a").click(function(event) {
     event.preventDefault();
     $.get($(this).attr("href"));
+    createResponseChart();
 });
 
 $("#new_test").click(function(event) {
@@ -36,9 +37,24 @@ $(".close_link").click(function(event) {
     $(this).parent().parent().hide();
 });
 
+
+$("#pause_stats").click(function(event) {
+    event.preventDefault();
+    $("#pause_stats").hide();
+    $("#unpause_stats").show();
+    pauseStats();
+});
+
+$("#unpause_stats").click(function(event) {
+    event.preventDefault();
+    $("#pause_stats").show();
+    $("#unpause_stats").hide();
+    unpauseStats();
+});
+
 var alternate = false;
 
-$("ul.tabs").tabs("div.panes > div");
+$("#status").tabs();
 
 var stats_tpl = $('#stats-template');
 var errors_tpl = $('#errors-template');
@@ -89,6 +105,18 @@ var sortBy = function(field, reverse, primer){
     }
 }
 
+var pauseStatUpdates = false;
+
+function pauseStats(){
+    pauseStatUpdates = true;
+}
+
+function unpauseStats(){
+    pauseStatUpdates = false;
+    updateStats();
+    updateResponseChart();
+}
+
 // Sorting by column
 var sortAttribute = "name";
 var desc = false;
@@ -126,30 +154,31 @@ function updateStats() {
 
         alternate = false;
 
-        totalRow = report.stats.pop()
-        sortedStats = (report.stats).sort(sortBy(sortAttribute, desc))
-
-        var stats_series = [];
-        for (i=0; i<sortedStats.length; i++){
-            stats_series.push({
-                name: sortedStats[i].method + " " + sortedStats[i].name,
-                data: sortedStats[i].all_responses_with_timestamps
-            });
-        }
-
-        sortedStats.push(totalRow)
+        totalRow = report.stats.pop();
+        sortedStats = (report.stats).sort(sortBy(sortAttribute, desc));
+        sortedStats.push(totalRow);
         $('#stats tbody').jqoteapp(stats_tpl, sortedStats);
         alternate = false;
         $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sortBy(sortAttribute, desc)));
 
-
-        var datetime_formatter = function() {
-            t = new Date(1970,0,1);
-            t.setSeconds(this.value);
-            return t.toLocaleTimeString()
+        if (!pauseStatUpdates){
+            setTimeout(updateStats, 2000);
         }
+    });
+}
+updateStats();
 
-        var chart = new Highcharts.Chart({
+var latest_timestamp = 0;
+var responseChart;
+function createResponseChart() {
+
+    var datetime_formatter = function() {
+        t = new Date(1970,0,1);
+        t.setSeconds(this.value);
+        return t.toLocaleTimeString()
+    }
+
+    responseChart = new Highcharts.Chart({
             chart: {
                 renderTo: 'all_requests',
                 type: 'scatter',
@@ -178,7 +207,7 @@ function updateStats() {
                     },
                     tooltip: {
                         headerFormat: '<b>{series.name}</b><br>',
-                        pointFormat: '{point.x} cm, {point.y} kg'
+                        pointFormat: '{point.y} ms,'
                     }
                 }
             },
@@ -198,14 +227,42 @@ function updateStats() {
                 title: {
                     text: 'Response Time (ms)'
                 }
-            },
-            series: stats_series
+            }
         });
+    updateResponseChart();
+}
 
-        setTimeout(updateStats, 2000);
+
+function updateResponseChart() {
+    var url = '/stats/responsetimes?timestamp='+latest_timestamp;
+    $.get(url, function (data) {
+        report = JSON.parse(data);
+        if (report.last_timestamp > latest_timestamp) {
+            latest_timestamp = report.last_timestamp;
+        }
+        sortedStats = (report.stats).sort(sortBy(sortAttribute, desc))
+        for (i=0; i<sortedStats.length; i++){
+            stats_series = responseChart.get(sortedStats[i].method + sortedStats[i].name);
+            if (stats_series) {
+                for (j=0;j<sortedStats[i].all_responses_with_timestamps.length;j++){
+                    stats_series.addPoint(sortedStats[i].all_responses_with_timestamps[j], redraw=false)
+                }
+            } else {
+                responseChart.addSeries({
+                    name: sortedStats[i].method + " " + sortedStats[i].name,
+                    data: sortedStats[i].all_responses_with_timestamps,
+                    id: sortedStats[i].method + sortedStats[i].name,
+                }, redraw=false);
+            }
+        }
+        responseChart.redraw();
+        responseChart.reflow();
+        if (!pauseStatUpdates){
+            setTimeout(updateResponseChart, 2000);
+        }
     });
 }
-updateStats();
+createResponseChart();
 
 function updateExceptions() {
     $.get('/exceptions', function (data) {
