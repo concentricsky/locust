@@ -60,7 +60,7 @@ a {
     font-size: 16px;
     font-weight: bold;
 }
-.boxes .box_rps .value, .boxes .box_slaves .value {
+.boxes .value.large {
     font-size: 32px;
 }
 .boxes .box_fail .value {
