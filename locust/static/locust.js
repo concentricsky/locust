@@ -268,7 +268,9 @@ function updateExceptions() {
     $.get('/exceptions', function (data) {
         $('#exceptions tbody').empty();
         $('#exceptions tbody').jqoteapp(exceptions_tpl, data.exceptions);
-        setTimeout(updateExceptions, 5000);
+        if (!pauseStatUpdates){
+            setTimeout(updateExceptions, 5000);
+        }
     });
 }
 updateExceptions();
